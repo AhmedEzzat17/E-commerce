@@ -1057,8 +1057,8 @@ const Navbar = () => {
         }
                   /* ستايل خاص لقائمة الموبايل الجديدة */
         .dropdown-menu-mobile.p-3 {
-          min-width: 55vw;
-          max-width: 60vw;
+          min-width: 60vw;
+          max-width: 65vw;
           margin-left: -15px;
           padding: 10px 8px;
           border-radius: 14px;
@@ -1088,7 +1088,7 @@ const Navbar = () => {
         @media (max-width: 600px) {
           .dropdown-menu-mobile.p-3 {
             min-width: 90vw;
-            max-width: 90vw;
+            max-width: 85vw;
             padding: 6px 2px;
           }
           .dropdown-menu-mobile.p-3 h4 {
@@ -1100,7 +1100,7 @@ const Navbar = () => {
           }
           .dropdown-menu-mobile.p-3 .btn {
             font-size: 0.8rem;
-            padding: 0.15rem 0.3rem;
+            padding: 0.75rem 0.3rem;
             border-radius: 7px;
           }
           .dropdown-menu-mobile.p-3 .badge {

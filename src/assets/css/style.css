@@ -425,6 +425,7 @@ th {
     -webkit-animation-duration: 0.3s;
     animation-fill-mode: both;
     -webkit-animation-fill-mode: both;
+        inset: 0px auto auto 0px;
   }
 }
 
@@ -878,8 +879,8 @@ th {
 }
 
 .dropdown-menu-lg-end[data-bs-popper] {
-  left: 0px;
-  right: auto;
+  left: 0px!important;
+  right: auto!important;
 }
 @media (max-width: 991px) {
   #navbar .user-items {
@@ -891,7 +892,7 @@ th {
   } */
 
   #header-nav .offcanvas .btn-close {
-    margin-right: 90px;
+    margin-right: 170px;
   }
 }
 
@@ -1448,9 +1449,9 @@ section#billboard .img-fluid {
 }
 
 @media (max-width: 991px) {
-  .category-thumbnail-item {
+  /* .category-thumbnail-item {
     width: auto;
-  }
+  } */
 
   .category-item h4 {
     font-size: 0.9em;
