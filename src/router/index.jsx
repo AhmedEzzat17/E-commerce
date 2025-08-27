@@ -7,6 +7,7 @@ import FullRecentProductsPage from "../pages/FullRecentProductsPage";
 import CategoryProductsPage from "../pages/CategoryProductsPage";
 import ShoppingCartSection from "../pages/ShoppingCartSection";
 import WishListSection from "../pages/WishListSection";
+import PaymentmMethod from "../pages/PaymentmMethod";
 import UserShow from "../A-Dashboard/users/UserShow";
 import UserEdit from "../A-Dashboard/users/UserEdit";
 import UserCreate from "../A-Dashboard/users/UserCreate";
@@ -31,6 +32,7 @@ const AppRoutes = () => (
     <Route path="/category/:id" element={<CategoryProductsPage />} />
     <Route path="/ShoppingCartSection" element={<ShoppingCartSection />} />
     <Route path="/WishListSection" element={<WishListSection />} />
+    <Route path="/PaymentmMethod" element={<PaymentmMethod />} />
     <Route
       path="/Dashboard"
       element={

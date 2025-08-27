@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
+import productService from "../../services/interface/productService";
 import { Link } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import { Modal, Button, Form, Tab, Nav, Dropdown } from "react-bootstrap";
-import "boxicons";
+import { Modal, Tab, Nav, Dropdown } from "react-bootstrap";
 import logoImg from "../../assets/images/resize_image_686fe7da13ce4.png";
 import Login from "../Auth/Login";
 import Register from "../Auth/Register";
@@ -18,27 +16,35 @@ const Navbar = () => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchContainerRef = useRef(null);
   const [showCart, setShowCart] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("userToken")
+  );
 
-  const {
-    cartItems,
-    wishlistItems,
-    addToCart,
-    removeFromCart,
-    addToWishlist,
-    removeFromWishlist,
-  } = useContext(CartWishlistContext);
+  const { cartItems, wishlistItems, addToCart, removeFromWishlist } =
+    useContext(CartWishlistContext);
 
-  // بيانات الاقتراحات
-  const suggestionsData = [
-    "أكياس ورقية",
-    "علب تغليف",
-    "أكياس قماش",
-    "أكياس بلاستيك",
-    "ملصقات لاصقة",
-    "أشرطة تغليف",
-    "أكواب ورقية",
-    "أدوات تعبئة",
-  ];
+  // جلب الفئات من الـ API
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        // غيّر الرابط حسب الـ endpoint الخاص بالفئات في مشروعك
+        const res = await productService.get({
+          withAuth: false,
+          params: { type: "categories" },
+        });
+        if (res.data?.status && Array.isArray(res.data.data?.data)) {
+          setCategories(res.data.data.data);
+        } else {
+          setCategories([]);
+        }
+      } catch {
+        setCategories([]);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const handleKeyUp = (e) => {
@@ -61,23 +67,39 @@ const Navbar = () => {
     }
   }, [showLoginModal]);
 
-  const handleSearchChange = (e) => {
+  // البحث الحقيقي للمنتجات بالاسم أو slug
+  const handleSearchChange = async (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-
-    const filtered = suggestionsData.filter((item) =>
-      item.toLowerCase().includes(query.toLowerCase())
-    );
-
-    setSearchSuggestions(filtered);
-    setShowSuggestions(query.length > 0);
-    setIsSearchExpanded(true);
+    if (query.length === 0) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      setIsSearchExpanded(false);
+      return;
+    }
+    // جلب المنتجات من الـ API
+    try {
+      const res = await productService.get({
+        withAuth: false,
+        params: { search: query },
+      });
+      if (res.data?.status && Array.isArray(res.data.data?.data)) {
+        setSearchSuggestions(res.data.data.data);
+      } else {
+        setSearchSuggestions([]);
+      }
+      setShowSuggestions(true);
+      setIsSearchExpanded(true);
+    } catch {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion);
+  const handleSuggestionClick = (product) => {
+    setSearchQuery(product.name);
     setShowSuggestions(false);
-    console.log("بحث عن:", suggestion);
+    window.location.href = `/productPage/${product.id}`;
   };
 
   const handleSearchClick = (e) => {
@@ -88,6 +110,17 @@ const Navbar = () => {
   const handleLoginClick = (e) => {
     e.preventDefault();
     setShowLoginModal(true);
+  };
+  const handleLogoutClick = (e) => {
+    e.preventDefault();
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem("userToken");
+    setIsLoggedIn(false);
+    setShowLogoutModal(false);
+    // يمكنك إضافة أي إعادة توجيه هنا إذا أردت
   };
 
   const LoginRegisterModal = () => (
@@ -124,9 +157,6 @@ const Navbar = () => {
 
   const [show, setShow] = useState(false);
 
-  const handleToggle = (isOpen) => setShow(isOpen);
-  const handleClose = () => setShow(false);
-
   return (
     <>
       {/* Search Popup */}
@@ -134,12 +164,10 @@ const Navbar = () => {
         <div
           className="search-popup is-visible"
           onClick={(e) => {
-            const isOutside = !e.target.closest(".search-popup-container");
-            const isCloseIcon =
-              e.target.classList.contains("search-popup-close") ||
-              e.target.closest(".search-popup-close");
-
-            if (isOutside || isCloseIcon) {
+            if (
+              !e.target.closest(".search-popup-container") ||
+              e.target.closest(".search-popup-close")
+            ) {
               setShowSearchPopup(false);
             }
           }}
@@ -158,52 +186,49 @@ const Navbar = () => {
                 <i className="bx bx-search"></i>
               </button>
             </form>
-
             <h5 className="cat-list-title">تصفح الفئات</h5>
             <ul className="cat-list">
+              {categories.length > 0 ? (
+                categories.map((cat) => (
+                  <li key={cat.id || cat._id} className="cat-list-item">
+                    <a href={cat.link || "#"}>{cat.name}</a>
+                  </li>
+                ))
+              ) : (
+                <li className="cat-list-item">لا توجد فئات متاحة</li>
+              )}
               <li className="cat-list-item">
-                <a href="#" title="رومانسي">
-                  أكياس
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="إثارة">
-                  تغليف
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="خيال علمي">
-                  تعبئة
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="طبخ">
-                  اكسسوارات
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="صحة">
-                  علب
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="نمط الحياة">
-                  ملصقات
-                </a>
-              </li>
-              <li className="cat-list-item">
-                <a href="#" title="خيال">
-                  أكواب
-                </a>
+                {isLoggedIn ? (
+                  <button
+                    className="btn btn-danger fw-bold"
+                    onClick={handleLogoutClick}
+                  >
+                    تسجيل الخروج{" "}
+                    <i
+                      className="bx bx-log-out me-1"
+                      style={{ fontSize: "25px" }}
+                    ></i>
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-link fw-bold"
+                    onClick={handleLoginClick}
+                    style={{ textDecoration: "none" }}
+                  >
+                    تسجيل حساب{" "}
+                    <i
+                      className="bx bx-user me-1"
+                      style={{ fontSize: "25px" }}
+                    ></i>
+                  </button>
+                )}
               </li>
             </ul>
           </div>
         </div>
       )}
-
-      {/* Login/Register Modal */}
+      {/* مودال تسجيل الدخول يظهر دائماً فوق الصفحة */}
       {showLoginModal && <LoginRegisterModal />}
-
       <header id="header" className="site-header sticky-top">
         <div className="top-info border-bottom d-none d-md-block">
           <div className="container-fluid top-nav">
@@ -276,22 +301,22 @@ const Navbar = () => {
                   className="navbar-nav text-uppercase justify-content-start justify-content-lg-start align-items-start align-items-lg-center flex-grow-1"
                 >
                   <li className="nav-item">
-                    <a className="nav-link me-3 active" href="#">
+                    <a className="nav-link me-3 active" href="/">
                       الصفحة الرئيسية
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="#one">
+                    <a className="nav-link me-3" href="/#one">
                       ما نزل مؤخرأ
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="#categories">
+                    <a className="nav-link me-3" href="/#categories">
                       الأقسام
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="#best-selling">
+                    <a className="nav-link me-3" href="/#best-selling">
                       الأكثر طلباً
                     </a>
                   </li>
@@ -300,7 +325,7 @@ const Navbar = () => {
                     <Dropdown.Toggle
                       as="a"
                       className="nav-link me-3"
-                      href="#best-selling-items"
+                      href="/#best-selling-items"
                     >
                       المستلزمات
                     </Dropdown.Toggle>
@@ -401,20 +426,47 @@ const Navbar = () => {
                           }}
                         >
                           {searchSuggestions.length > 0 ? (
-                            searchSuggestions.map((item, index) => (
-                              <div
-                                key={index}
-                                className="suggestion-item p-3 border-bottom"
-                                style={{
-                                  cursor: "pointer",
-                                  transition: "all 0.2s",
-                                }}
-                                onClick={() => handleSuggestionClick(item)}
-                              >
-                                <i className="bx bx-search-alt-2 ms-2"></i>
-                                {item}
-                              </div>
-                            ))
+                            searchSuggestions
+                              .filter(
+                                (item) => typeof item === "object" && item.name
+                              )
+                              .map((item) => (
+                                <div
+                                  key={item.id}
+                                  className="suggestion-item p-3 border-bottom"
+                                  style={{
+                                    cursor: "pointer",
+                                    transition: "all 0.2s",
+                                  }}
+                                  onClick={() => handleSuggestionClick(item)}
+                                >
+                                  <img
+                                    src={
+                                      item.main_image ||
+                                      (Array.isArray(item.images) &&
+                                        item.images[0]?.full_url) ||
+                                      (typeof item.images === "string" &&
+                                      item.images
+                                        ? `https://myappapi.fikriti.com/${item.images}`
+                                        : "https://via.placeholder.com/32x32?text=No+Image")
+                                    }
+                                    alt={item.name}
+                                    style={{
+                                      width: 32,
+                                      height: 32,
+                                      objectFit: "cover",
+                                      borderRadius: "6px",
+                                      marginLeft: "8px",
+                                    }}
+                                  />
+                                  {item.name}{" "}
+                                  {item.slug && (
+                                    <span className="text-muted">
+                                      ({item.slug})
+                                    </span>
+                                  )}
+                                </div>
+                              ))
                           ) : (
                             <div
                               className="suggestion-item p-3  text-center"
@@ -521,19 +573,19 @@ const Navbar = () => {
                         </ul>
                         <div className="d-flex flex-wrap justify-content-center">
                           <Link
-                            to="/WishListSection"
+                            to="/Favorites"
                             className="w-100 btn btn-dark mb-1"
                             onClick={() => setShow(false)} // أيضاً هنا
                           >
                             عرض قائمة رغباتك
                           </Link>
-                          <Link
-                            to="/"
+                          {/* <Link
+                            to="/PaymentmMethod"
                             className="w-100 btn btn-primary"
                             onClick={() => setShow(false)} // أيضاً هنا
                           >
                             الذهاب إلى الدفع
-                          </Link>
+                          </Link> */}
                         </div>
                       </Dropdown.Menu>
                     </Dropdown>
@@ -638,9 +690,12 @@ const Navbar = () => {
                             عرض السلة
                           </Link>
                           <Link
-                            to="/"
+                            to="/PaymentmMethod"
                             className="w-100 btn btn-primary"
-                            onClick={() => setShowCart(false)} // ✅ يغلق عند الضغط
+                            onClick={() => {
+                              window.scrollTo(0, 0);
+                              setShowCart(false);
+                            }} // ✅ يغلق عند الضغط
                           >
                             الذهاب إلى الدفع
                           </Link>
@@ -733,20 +788,42 @@ const Navbar = () => {
                     }}
                   >
                     {searchSuggestions.length > 0 ? (
-                      searchSuggestions.map((item, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item p-3 border-bottom"
-                          style={{
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                          }}
-                          onClick={() => handleSuggestionClick(item)}
-                        >
-                          <i className="bx bx-search-alt-2 ms-2"></i>
-                          {item}
-                        </div>
-                      ))
+                      searchSuggestions
+                        .filter((item) => typeof item === "object" && item.name)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="suggestion-item p-3 border-bottom"
+                            style={{
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                            }}
+                            onClick={() => handleSuggestionClick(item)}
+                          >
+                            <img
+                              src={
+                                item.main_image ||
+                                (Array.isArray(item.images) &&
+                                  item.images[0]?.full_url) ||
+                                (typeof item.images === "string" && item.images
+                                  ? `https://myappapi.fikriti.com/${item.images}`
+                                  : "https://via.placeholder.com/32x32?text=No+Image")
+                              }
+                              alt={item.name}
+                              style={{
+                                width: 32,
+                                height: 32,
+                                objectFit: "cover",
+                                borderRadius: "6px",
+                                marginLeft: "8px",
+                              }}
+                            />
+                            {item.name}{" "}
+                            {item.slug && (
+                              <span className="text-muted">({item.slug})</span>
+                            )}
+                          </div>
+                        ))
                     ) : (
                       <div
                         className="suggestion-item p-3  text-center"
@@ -833,13 +910,13 @@ const Navbar = () => {
                     >
                       عرض قائمة رغباتك
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/"
                       className="w-100 btn btn-primary"
                       onClick={() => setShow(false)}
                     >
                       الذهاب إلى الدفع
-                    </Link>
+                    </Link> */}
                   </div>
                 </Dropdown.Menu>
               </Dropdown>
@@ -949,9 +1026,12 @@ const Navbar = () => {
                       عرض السلة
                     </Link>
                     <Link
-                      to="/"
+                      to="/PaymentmMethod"
                       className="w-100 btn btn-primary"
-                      onClick={() => setShowCart(false)}
+                      onClick={() => {
+                              window.scrollTo(0, 0);
+                              setShowCart(false);
+                            }}
                     >
                       الذهاب إلى الدفع
                     </Link>
@@ -1009,10 +1089,6 @@ const Navbar = () => {
         li::marker {
           content: none;
         }
-
-        /* نافذة السلة والمفضلة */
-
-
 
         /* تعديلات للجوال */
         @media (max-width: 991px) {

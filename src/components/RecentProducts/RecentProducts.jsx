@@ -4,6 +4,13 @@ import "../../assets/css/style.css";
 import ProductService from "../../services/interface/productService";
 import { CartWishlistContext } from "../../App";
 
+// دالة لحفظ ملاحظة المنتج في السلة داخل localStorage بشكل كائن
+// الاستخدام: saveProductNote(productId, note)
+function saveProductNote(productId, note) {
+  const notes = JSON.parse(localStorage.getItem("cartNotes") || "{}");
+  notes[productId] = note;
+  localStorage.setItem("cartNotes", JSON.stringify(notes));
+}
 export default function RecentProducts() {
   const [products, setProducts] = useState([]);
   const fallbackImage = "https://via.placeholder.com/300x300?text=No+Image";
@@ -87,8 +94,16 @@ export default function RecentProducts() {
                       }
                       style={
                         inWishlist
-                          ? { background: "#407c7c", color: "#fff", border:"none" }
-                          : { background: "#fff", color: "#407c7c", border:"none" }
+                          ? {
+                              background: "#407c7c",
+                              color: "#fff",
+                              border: "none",
+                            }
+                          : {
+                              background: "#fff",
+                              color: "#407c7c",
+                              border: "none",
+                            }
                       }
                       onClick={() =>
                         inWishlist

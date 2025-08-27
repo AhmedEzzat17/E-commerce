@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useContext } from "react";
 import "../../assets/css/product.css";
 import { CartWishlistContext } from "../../App";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductDetails({ product }) {
   const [mainImage, setMainImage] = useState("");
+  const [note, setNote] = useState("");
   const { cartItems, addToCart, removeFromCart, addToWishlist } =
     useContext(CartWishlistContext);
+  const navigate = useNavigate();
 
   // خلي الصورة الأساسية الافتراضية هي اللي تيجي من المنتج
   useEffect(() => {
@@ -137,27 +140,45 @@ export default function ProductDetails({ product }) {
                 ))}
 
             {/* رابط نصي لفتح نافذة الملاحظة */}
-            <div
-              className="note-text-link"
-              style={{
-                marginTop: "10px",
-                direction: "rtl",
-                fontSize: "16px",
-                cursor: "pointer",
-                textDecoration: "underline",
-                textAlign: "center",
-                color: "red",
-                fontWeight: "bold",
-                transition: "all 0.3s",
-              }}
-              onClick={() => {
-                const modal = document.getElementById("noteModal");
-                if (modal) modal.style.display = "flex";
-              }}
-            >
-              إضغط هنا حتى يمكنك كتابة ملاحظة للبائع تخص الطلب، مثل نوع تريد
-              تذكيره به، طلب معين، طريقة التوصيل.
-            </div>
+            {inCart ? (
+              <div
+                className="note-text-link"
+                style={{
+                  marginTop: "10px",
+                  direction: "rtl",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textAlign: "center",
+                  color: "red",
+                  fontWeight: "bold",
+                  transition: "all 0.3s",
+                }}
+                onClick={() => {
+                  const modal = document.getElementById("noteModal");
+                  if (modal) modal.style.display = "flex";
+                }}
+              >
+                إضغط هنا حتى يمكنك كتابة ملاحظة للبائع تخص الطلب، مثل نوع تريد
+                تذكيره به، طلب معين، طريقة التوصيل.
+              </div>
+            ) : (
+              <div
+                style={{
+                  marginTop: "10px",
+                  background: "#fa0f0fff",
+                  color: "#fff",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: "16px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                }}
+              >
+                لإضافه ملاحظه للبائع تخص الطلب، مثل نوع تريد تذكيره به، طلب معين، طريقة التوصيل،أضف المنتج إلى السلة أولاً
+              </div>
+            )}
           </div>
 
           {/* زر السلة ديناميكي */}
@@ -177,7 +198,16 @@ export default function ProductDetails({ product }) {
             </button>
           )}
 
-          <button className="buy-now-button">اشترِ الآن</button>
+          <button
+            className="buy-now-button"
+            onClick={() => {
+              window.scrollTo(0, 0);
+              navigate("/PaymentmMethod", { state: { product } });
+            }}
+            
+          >
+            اشترِ الآن
+          </button>
 
           {/* Features */}
           <div className="product-features">
@@ -288,6 +318,8 @@ export default function ProductDetails({ product }) {
             <textarea
               placeholder="أضف ملاحظتك هنا"
               rows="5"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               style={{
                 width: "100%",
                 borderRadius: "8px",
@@ -310,6 +342,16 @@ export default function ProductDetails({ product }) {
                 cursor: "pointer",
                 fontSize: "16px",
                 width: "100%",
+              }}
+              onClick={() => {
+                const notes = JSON.parse(
+                  localStorage.getItem("cartNotes") || "{}"
+                );
+                notes[product.id] = note;
+                localStorage.setItem("cartNotes", JSON.stringify(notes));
+                // إغلاق النافذة بعد الحفظ
+                const modal = document.getElementById("noteModal");
+                if (modal) modal.style.display = "none";
               }}
             >
               إرسال الملاحظة

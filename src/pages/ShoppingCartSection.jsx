@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { CartWishlistContext } from "../App";
+import { Link } from "react-router-dom";
 
 const ShoppingCartSection = () => {
   const {
@@ -170,7 +171,9 @@ const ShoppingCartSection = () => {
                   {subtotal.toFixed(2)} ر.س
                 </span>
               </div>
-              <button className="zelcashop-checkout-btn">اتمام الطلب</button>
+              <Link to="/PaymentmMethod" onClick={() => window.scrollTo(0, 0)}>
+                <button className="zelcashop-checkout-btn">اتمام الطلب</button>
+              </Link>
             </div>
           </div>
         </div>

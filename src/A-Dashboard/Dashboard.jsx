@@ -174,7 +174,7 @@
                 <i className="bx bxs-shopping-bag icon"></i> المنتجات
               </Link>
             </li>
-            <li>
+            {/* <li>
               <a
                 href="/user"
                 onClick={(e) => handleMenuItemClick(e, "offers")}
@@ -197,7 +197,7 @@
               >
                 <i className="bx bxs-store icon"></i> جميع البراندات
               </a>
-            </li>
+            </li> */}
             <li>
               <Link
                 to="/Dashboard/users"
@@ -209,10 +209,9 @@
               >
                 <i className="bx bxs-user icon"></i> المستخدمين
               </Link>
-            
             </li>
 
-            <li>
+            {/* <li>
               <a
                 href="/user"
                 onClick={(e) => handleMenuItemClick(e, "favorites")}
@@ -223,7 +222,7 @@
               >
                 <i className="bx bxs-heart icon"></i> المفضلات
               </a>
-            </li>
+            </li> */}
             <li>
               <a
                 href="/user"
